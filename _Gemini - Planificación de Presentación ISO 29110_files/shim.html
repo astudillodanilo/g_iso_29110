@@ -1,0 +1,829 @@
+
+<!-- saved from url=(0132)blob:https://1c9ikwkefwg01nvg8h041spyfvj9mvlr6ymmxw0h958hganxsz-h761100114.scf.usercontent.goog/4cf79834-a7ef-44fc-9214-38fc9324ea4f -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(firebaseConfig, initialAuthToken, appId) {
+        window.__firebase_config = firebaseConfig;
+        window.__initial_auth_token = initialAuthToken;
+        window.__app_id = appId;
+            })("\n{\n  \"apiKey\": \"AIzaSyCqyCcs2R2e7AegGjvFAwG98wlamtbHvZY\",\n  \"authDomain\": \"bard-frontend.firebaseapp.com\",\n  \"projectId\": \"bard-frontend\",\n  \"storageBucket\": \"bard-frontend.firebasestorage.app\",\n  \"messagingSenderId\": \"175205271074\",\n  \"appId\": \"1:175205271074:web:2b7bd4d34d33bf38e6ec7b\"\n}\n","eyJhbGciOiJSUzI1NiIsImtpZCI6IjhmODcxYTU0ODRjYWM0MjU5NTBiNzhiNGZhNWMxZGZlMjkzYjgwYWEiLCJ0eXAiOiJKV1QifQ.eyJzdWIiOiJmaXJlYmFzZS1hZG1pbnNkay1mYnN2Y0BiYXJkLWZyb250ZW5kLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiYXVkIjoiaHR0cHM6XC9cL2lkZW50aXR5dG9vbGtpdC5nb29nbGVhcGlzLmNvbVwvZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJ1aWQiOiIwMzYyNzg1MTIzMTY5NDIxNzE3NyIsImlzcyI6ImZpcmViYXNlLWFkbWluc2RrLWZic3ZjQGJhcmQtZnJvbnRlbmQuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJleHAiOjE3NDg1ODI2MDAsImlhdCI6MTc0ODU3OTAwMCwiYWxnIjoiUlMyNTYifQ.qQTNTwB_b8yysG0cdn5FBgG6KZFkkS23RXQNH6EZkBIjYxBfqdb5La4Yx9rm6cJ05GkzFB6dpYgK7mcqEzHsXNhdgmnFLQMOAuvyiKG6XtkbSD2UmFtuIdU1J0-1ABuqVm4JNbuY9ASyEfmiB5KmwQeKBfpeLD2nnAZy4J5cRlNXVrcwMy5cFa5p6RHyQRZ9WK-qopM1gkZaeMe5uV_98CMqyB5i54SxInPkCJF573sGh1Ww9Y2t7v7-EGEcm0T1HVLxn6EOQQCwPwQ7JKBIjJ5MsUxaIy3Gdfm5DCAymbitWkkAMiDO7Oby7R3Gsx3cSj1E9qGY-0U2WHPHGdgHzA","7c49958e9cd9-spa-tesis-iso29110-450")</script><script>(function() {
+  // Ensure this script is executed only once
+  if (window.firebaseAuthBridgeScriptLoaded) {
+    return;
+  }
+  window.firebaseAuthBridgeScriptLoaded = true;
+
+  let nextTokenPromiseId = 0;
+
+  // Stores { resolve, reject } for ongoing token requests
+  const pendingTokenPromises = {};
+
+  // Listen for messages from the Host Application
+  window.addEventListener('message', function(event) {
+
+    const messageData = event.data;
+
+  if (messageData && messageData.type === 'RESOLVE_NEW_FIREBASE_TOKEN') {
+      const { success, token, error, promiseId } = messageData ?? {};
+      if (pendingTokenPromises[promiseId]) {
+        if (success) {
+          pendingTokenPromises[promiseId].resolve(token);
+        } else {
+          pendingTokenPromises[promiseId].reject(new Error(error || 'Token refresh failed from host.'));
+        }
+        delete pendingTokenPromises[promiseId];
+      }
+    }
+  });
+
+  // Expose a function for the Generated App to request a new Firebase token
+  window.requestNewFirebaseToken = function() {
+    const currentPromiseId = nextTokenPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingTokenPromises[currentPromiseId] = { resolve, reject };
+    });
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'REQUEST_NEW_FIREBASE_TOKEN',
+        promiseId: currentPromiseId
+      }, '*');
+    } else {
+      pendingTokenPromises[currentPromiseId].reject(new Error('No parent window to request token from.'));
+      delete pendingTokenPromises[currentPromiseId];
+    }
+    return promise;
+  };
+})();</script><script>let realOriginalGetUserMedia = null;
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  realOriginalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+}
+
+(function() {
+  if (navigator.mediaDevices && navigator.mediaDevices.__proto__) {
+    try {
+      Object.defineProperty(navigator.mediaDevices.__proto__, 'getUserMedia', {
+        get: function() {
+          return undefined; // Or throw an error
+        },
+        configurable: false
+      });
+    } catch (error) {
+      console.error("Error defining prototype getter:", error);
+    }
+  }
+})();
+
+(function() {
+  let originalGetUserMedia = realOriginalGetUserMedia;
+
+  const pendingMediaResolvers = {};
+  let nextMediaPromiseId = 0;
+
+  function interceptGetUserMedia() {
+    if (navigator.mediaDevices) {
+      Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+        value: function(constraints) {
+          const mediaPromiseId = nextMediaPromiseId++;
+          const promise = new Promise((resolve, reject) => {
+            pendingMediaResolvers[mediaPromiseId] = (granted) => {
+              delete pendingMediaResolvers[mediaPromiseId];
+              if (granted) {
+                if (originalGetUserMedia) {
+                  originalGetUserMedia(constraints).then(resolve).catch(reject);
+                } else {
+                  reject(new Error("Original getUserMedia not available."));
+                }
+              } else {
+              reject(new DOMException('Permission denied', 'NotAllowedError'));
+            }
+          };
+        });
+
+        window.parent.postMessage({
+          type: 'requestMediaPermission',
+          constraints: constraints,
+          promiseId: mediaPromiseId,
+        }, '*');
+
+        return promise;
+      },
+      writable: false,
+      configurable: false
+    });
+    }
+  }
+
+  interceptGetUserMedia();
+
+  const observer = new MutationObserver(function(mutationsList, observer) {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'reconfigured' && mutation.name === 'getUserMedia' && mutation.object === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'attributes' && mutation.attributeName === 'getUserMedia' && mutation.target === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'childList' && mutation.addedNodes) {
+        mutation.addedNodes.forEach(node => {
+          if (node === navigator.mediaDevices) {
+            interceptGetUserMedia();
+          }
+        });
+      }
+    }
+  });
+
+  window.addEventListener('message', function(event) {
+    if (event.data) {
+      if (event.data.type === 'resolveMediaPermission') {
+        const { promiseId, granted } = event.data;
+        if (pendingMediaResolvers[promiseId]) {
+          pendingMediaResolvers[promiseId](granted);
+        }
+      }
+    }
+  });
+
+})();</script><script>(function() {
+  const originalFetch = window.fetch;
+  const googleLlmBaseApiUrls = [
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/veo-2.0-generate-001:predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/veo-2.0-generate-001:predictLongRunning',
+  ];
+
+  const pendingFetchResolvers = {};
+  let nextPromiseId = 0;
+
+  function handleStringInput(input, optionsArgument) {
+    const actualUrl = input;
+    const fetchCallArgs = [actualUrl, optionsArgument];
+    const effectiveOptions = optionsArgument || {};
+    const bodyForApiKeyCheck = effectiveOptions.body;
+    const bodyForPostMessage = effectiveOptions.body;
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  function handleRequestInput(input, optionsArgument) {
+    const actualUrl = input.url;
+    const fetchCallArgs = [input, optionsArgument];
+    const effectiveOptions = { method: input.method, headers: new Headers(input.headers) };
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (optionsArgument) {
+      if (optionsArgument.method) effectiveOptions.method = optionsArgument.method;
+      if (optionsArgument.headers) effectiveOptions.headers = new Headers(optionsArgument.headers);
+      if ('body' in optionsArgument) {
+        bodyForApiKeyCheck = optionsArgument.body;
+        bodyForPostMessage = optionsArgument.body;
+      } else {
+        bodyForApiKeyCheck = undefined;
+        bodyForPostMessage = input.body;
+      }
+    } else {
+      bodyForApiKeyCheck = undefined;
+      bodyForPostMessage = input.body;
+    }
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  window.fetch = function(input, optionsArgument) {
+    let actualUrl;
+    let fetchCallArgs;
+    let effectiveOptions = {};
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (typeof input === 'string') {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleStringInput(input, optionsArgument));
+    } else if (input instanceof Request) {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleRequestInput(input, optionsArgument));
+    } else {
+      return originalFetch.apply(window, [input, optionsArgument]);
+    }
+
+    effectiveOptions.method = effectiveOptions.method || 'GET';
+    if (!effectiveOptions.headers) {
+      effectiveOptions.headers = new Headers();
+    }
+
+
+    if (typeof actualUrl === 'string' && googleLlmBaseApiUrls.some((url) => actualUrl.startsWith(url))) {
+      let apiKeyIsNull = true;
+
+      const regex = new RegExp("models/([^:]+)");
+      const modelNameMatch = actualUrl.match(regex);
+      const modelName = modelNameMatch ? modelNameMatch[1] : 'unspecified';
+
+
+      try {
+        const urlObject = new URL(actualUrl);  // Use URL object for robust parsing
+        const apiKeyParam = urlObject.searchParams.get('key');
+        if (apiKeyParam) {
+          apiKeyIsNull = false;
+        }
+      } catch (e) {
+        // Continue checks even if URL parsing fails
+      }
+
+      if (apiKeyIsNull && effectiveOptions.headers) {
+        const h = new Headers(effectiveOptions.headers);
+        const apiKeyHeaderValue = h.get('X-API-Key') || h.get('x-api-key');
+        if (apiKeyHeaderValue) {
+          apiKeyIsNull = false;
+          return originalFetch.apply(window, fetchCallArgs);
+        }
+      }
+
+      if (apiKeyIsNull && effectiveOptions.method && ['POST', 'PUT', 'PATCH'].includes(effectiveOptions.method.toUpperCase()) && typeof bodyForApiKeyCheck === 'string') {
+        try {
+          const bodyData = JSON.parse(bodyForApiKeyCheck);
+          if (bodyData && bodyData.apiKey) {
+            apiKeyIsNull = false;
+            return originalFetch.apply(window, fetchCallArgs);
+          }
+        } catch (e) {
+          // Ignore JSON parsing errors
+        }
+      }
+
+      if(apiKeyIsNull) {
+        const promiseId = nextPromiseId++;
+        const promise = new Promise((resolve) => {
+          pendingFetchResolvers[promiseId] = (resolvedResponse) => {
+            delete pendingFetchResolvers[promiseId];
+            resolve(resolvedResponse);
+          };
+        });
+
+        let serializedBodyForPostMessage;
+        if (typeof bodyForPostMessage === 'string' || bodyForPostMessage == null) {
+            serializedBodyForPostMessage = bodyForPostMessage;
+        } else if (bodyForPostMessage instanceof ReadableStream) {
+            serializedBodyForPostMessage = null;
+        } else {
+            try {
+                serializedBodyForPostMessage = JSON.stringify(bodyForPostMessage);
+            } catch (e) {
+                serializedBodyForPostMessage = null;
+            }
+        }
+
+        const messageOptions = {
+            method: effectiveOptions.method,
+            headers: Object.fromEntries(new Headers(effectiveOptions.headers).entries()),
+            body: serializedBodyForPostMessage
+        };
+
+        window.parent.postMessage({
+          type: 'requestFetch',
+          url: actualUrl,
+          modelName: 'models/' + modelName,
+          options: messageOptions,
+          promiseId: promiseId,
+        }, '*');
+
+        return promise;
+      }
+      return originalFetch.apply(window, fetchCallArgs);
+    }
+    return originalFetch.apply(window, fetchCallArgs);
+  };
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'resolveFetch') {
+      const { promiseId, response } = event.data;
+      if (pendingFetchResolvers[promiseId]) {
+        try {
+          const reconstructedResponse = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: new Headers(response.headers),
+          });
+          pendingFetchResolvers[promiseId](reconstructedResponse);
+        } catch (error) {
+          pendingFetchResolvers[promiseId](new Response(null, { status: 500, statusText: "Interceptor Response Reconstruction Error" }));
+        }
+      }
+    }
+  });
+
+})();</script><script>(function() {
+  const originalConsoleLog = console.log;
+  const originalConsoleError = console.error;
+
+    /**
+   * Normalizes an error event or a promise rejection reason into a structured error object.
+   * @param {*} errorEventOrReason The error object or reason.
+   * @return {object} Structured error data { message, name, stack }.
+   */
+  function getErrorObject(errorEventOrReason) {
+    if (errorEventOrReason instanceof Error) {
+      return {
+        message: errorEventOrReason.message,
+        name: errorEventOrReason.name,
+        stack: errorEventOrReason.stack,
+      };
+    }
+    // Fallback for non-Error objects.
+    try {
+      return {
+        message: JSON.stringify(errorEventOrReason),
+        name: 'UnknownErrorType',
+        stack: null,
+      };
+    } catch (e) {
+      return {
+        message: String(errorEventOrReason),
+        name: 'UnknownErrorTypeNonStringifiable',
+        stack: null,
+      };
+    }
+  }
+
+  /**
+   * Converts an array of arguments (from log/error) into a single string.
+   * Handles Error objects specially to include their message and stack.
+   * @param {Array<*>} args - Arguments passed to console methods.
+   * @return {string} A string representation of the arguments.
+   */
+  function stringifyArgs(args) {
+    return args
+      .map((arg) => {
+        if (arg instanceof Error) {
+          const {message, stack} = arg;
+          return `Error: ${message}${stack ? ('\nStack: ' + stack) : ''}`;
+        }
+        if (typeof arg === 'object' && arg !== null) {
+          try {
+            return JSON.stringify(arg);
+          } catch (error) {
+            return '[Circular Object]';
+          }
+        } else {
+          return String(arg);
+        }
+      })
+      .join(' ');
+  }
+
+  console.log = function(...args) {
+    const logString = stringifyArgs(args);
+    window.parent.postMessage({ type: 'log', message: logString }, '*');
+    originalConsoleLog.apply(console, args);
+  };
+
+  console.error = function(...args) {
+    let errorData;
+    if (args.length > 0 && args[0] instanceof Error) {
+      const err = args[0];
+      // If the first arg is an Error, capture its details.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        ...getErrorObject(err),
+        rawArgsString: stringifyArgs(args.slice(1)),
+        timestamp: new Date().toISOString(),
+      };
+    } else {
+      // If not an Error object, treat all args as a general error message.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        message: stringifyArgs(args),
+        name: 'ConsoleLoggedError',
+        stack: null,
+        timestamp: new Date().toISOString(),
+      };
+    }
+    window.parent.postMessage(errorData, '*');
+    originalConsoleError.apply(console, args);
+  };
+
+  // Listen for global unhandled synchronous errors.
+  window.addEventListener('error', function(event) {
+    const errorDetails = event.error ? getErrorObject(event.error) : {
+      message: event.message,
+      name: 'GlobalError',
+      stack: null,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    };
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'global',
+      ...errorDetails,
+      message: errorDetails.message || event.message,
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+  // Listen for unhandled promise rejections (asynchronous errors).
+  window.addEventListener('unhandledrejection', function(event) {
+    const errorDetails = getErrorObject(event.reason);
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'unhandledrejection',
+      ...errorDetails,
+      message: errorDetails.message || 'Unhandled Promise Rejection',
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+})();</script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Interactiva ISO 29110 para PYMES de Software</title>
+    <script src="https://cdn.tailwindcss.com/"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
+    <!-- Visualization & Content Choices: 
+        - Inicio: Texto introductorio. Objetivo: Orientar. Método: HTML/Texto. Interacción: Navegación. Justificación: Contextualizar.
+        - ¿Qué es ISO 29110?: Explicaciones textuales y diagramas simples (HTML/CSS) para perfiles y procesos. Objetivo: Informar/Organizar. Método: HTML/Texto/Diagramas CSS. Interacción: Estática/Navegación. Justificación: Clarificar los fundamentos del estándar.
+        - La Guía Práctica: Descripción de la guía y diagrama de fases (HTML/CSS). Objetivo: Informar/Organizar. Método: HTML/Texto/Diagrama CSS. Interacción: Estática/Navegación. Justificación: Detallar la solución propuesta.
+        - Beneficios: Lista de beneficios y un gráfico de barras (Chart.js) para impacto. Objetivo: Persuadir/Comparar. Método: HTML/Texto/Chart.js Canvas. Interacción: Tooltips en gráfico. Justificación: Mostrar el valor tangible.
+        - Implementación y Más: Conclusiones y recomendaciones. Objetivo: Guiar. Método: HTML/Texto. Interacción: Navegación. Justificación: Resumir y orientar próximos pasos.
+        - CONFIRMACIÓN: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif; /* Tailwind default is often sans-serif, Inter is a good choice */
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            border-color: #2563eb; /* blue-600 */
+            color: #2563eb;
+            background-color: #eff6ff; /* blue-50 */
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .diagram-box {
+            border: 1px solid #cbd5e1; /* slate-300 */
+            padding: 0.75rem; /* p-3 */
+            margin-bottom: 0.5rem; /* mb-2 */
+            border-radius: 0.375rem; /* rounded-md */
+            background-color: #f8fafc; /* slate-50 */
+            text-align: center;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px; /* Max width for chart readability */
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px; /* Base height */
+            max-height: 400px; /* Max height */
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+            .chart-container {
+                height: 350px;
+            }
+        }
+        h2 {
+            font-size: 1.75rem; /* text-2xl */
+            font-weight: 600; /* font-semibold */
+            color: #1e3a8a; /* blue-800 */
+            margin-bottom: 1rem; /* mb-4 */
+            border-bottom: 2px solid #93c5fd; /* blue-300 */
+            padding-bottom: 0.5rem; /* pb-2 */
+        }
+        h3 {
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 600; /* font-semibold */
+            color: #1d4ed8; /* blue-700 */
+            margin-top: 1.5rem; /* mt-6 */
+            margin-bottom: 0.75rem; /* mb-3 */
+        }
+        p, li {
+            line-height: 1.6;
+            color: #334155; /* slate-700 */
+        }
+        .section-intro {
+            font-style: italic;
+            color: #475569; /* slate-600 */
+            margin-bottom: 1.5rem; /* mb-6 */
+            padding: 1rem; /* p-4 */
+            background-color: #e0f2fe; /* sky-100 */
+            border-left: 4px solid #0ea5e9; /* sky-500 */
+            border-radius: 0.25rem; /* rounded-sm */
+        }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.16 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.container{width:100%}@media (min-width: 640px){.container{max-width:640px}}@media (min-width: 768px){.container{max-width:768px}}@media (min-width: 1024px){.container{max-width:1024px}}@media (min-width: 1280px){.container{max-width:1280px}}@media (min-width: 1536px){.container{max-width:1536px}}.sticky{position:sticky}.top-0{top:0px}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.my-2{margin-top:0.5rem;margin-bottom:0.5rem}.my-4{margin-top:1rem;margin-bottom:1rem}.mb-1{margin-bottom:0.25rem}.mb-2{margin-bottom:0.5rem}.mb-4{margin-bottom:1rem}.mb-6{margin-bottom:1.5rem}.mt-1{margin-top:0.25rem}.mt-12{margin-top:3rem}.mt-6{margin-top:1.5rem}.mt-8{margin-top:2rem}.flex{display:flex}.grid{display:grid}.flex-1{flex:1 1 0%}.list-inside{list-style-position:inside}.list-decimal{list-style-type:decimal}.list-disc{list-style-type:disc}.flex-col{flex-direction:column}.justify-center{justify-content:center}.gap-4{gap:1rem}.space-y-1 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.25rem * var(--tw-space-y-reverse))}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.rounded-lg{border-radius:0.5rem}.rounded-md{border-radius:0.375rem}.rounded-t-md{border-top-left-radius:0.375rem;border-top-right-radius:0.375rem}.border{border-width:1px}.border-b-2{border-bottom-width:2px}.border-blue-200{--tw-border-opacity:1;border-color:rgb(191 219 254 / var(--tw-border-opacity, 1))}.border-green-200{--tw-border-opacity:1;border-color:rgb(187 247 208 / var(--tw-border-opacity, 1))}.border-sky-200{--tw-border-opacity:1;border-color:rgb(186 230 253 / var(--tw-border-opacity, 1))}.border-transparent{border-color:transparent}.bg-blue-50{--tw-bg-opacity:1;background-color:rgb(239 246 255 / var(--tw-bg-opacity, 1))}.bg-blue-700{--tw-bg-opacity:1;background-color:rgb(29 78 216 / var(--tw-bg-opacity, 1))}.bg-green-50{--tw-bg-opacity:1;background-color:rgb(240 253 244 / var(--tw-bg-opacity, 1))}.bg-sky-50{--tw-bg-opacity:1;background-color:rgb(240 249 255 / var(--tw-bg-opacity, 1))}.bg-slate-100{--tw-bg-opacity:1;background-color:rgb(241 245 249 / var(--tw-bg-opacity, 1))}.bg-slate-50{--tw-bg-opacity:1;background-color:rgb(248 250 252 / var(--tw-bg-opacity, 1))}.bg-slate-800{--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.p-4{padding:1rem}.p-6{padding:1.5rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-4{padding-left:1rem;padding-right:1rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-4{padding-top:1rem;padding-bottom:1rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.py-8{padding-top:2rem;padding-bottom:2rem}.pl-5{padding-left:1.25rem}.text-center{text-align:center}.text-2xl{font-size:1.5rem;line-height:2rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-medium{font-weight:500}.font-semibold{font-weight:600}.text-blue-600{--tw-text-opacity:1;color:rgb(37 99 235 / var(--tw-text-opacity, 1))}.text-blue-700{--tw-text-opacity:1;color:rgb(29 78 216 / var(--tw-text-opacity, 1))}.text-green-700{--tw-text-opacity:1;color:rgb(21 128 61 / var(--tw-text-opacity, 1))}.text-sky-600{--tw-text-opacity:1;color:rgb(2 132 199 / var(--tw-text-opacity, 1))}.text-sky-700{--tw-text-opacity:1;color:rgb(3 105 161 / var(--tw-text-opacity, 1))}.text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139 / var(--tw-text-opacity, 1))}.text-slate-800{--tw-text-opacity:1;color:rgb(30 41 59 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-xl{--tw-shadow:0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.hover\:bg-blue-50:hover{--tw-bg-opacity:1;background-color:rgb(239 246 255 / var(--tw-bg-opacity, 1))}.hover\:text-blue-600:hover{--tw-text-opacity:1;color:rgb(37 99 235 / var(--tw-text-opacity, 1))}@media (min-width: 640px){.sm\:flex-row{flex-direction:row}.sm\:space-x-2 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.5rem * var(--tw-space-x-reverse));margin-left:calc(0.5rem * calc(1 - var(--tw-space-x-reverse)))}.sm\:space-y-0 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0px * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0px * var(--tw-space-y-reverse))}.sm\:px-4{padding-left:1rem;padding-right:1rem}.sm\:px-6{padding-left:1.5rem;padding-right:1.5rem}.sm\:text-3xl{font-size:1.875rem;line-height:2.25rem}.sm\:text-base{font-size:1rem;line-height:1.5rem}}@media (min-width: 768px){.md\:col-span-2{grid-column:span 2 / span 2}.md\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.md\:flex-row{flex-direction:row}}@media (min-width: 1024px){.lg\:px-8{padding-left:2rem;padding-right:2rem}}</style></head>
+<body class="bg-slate-100 text-slate-800 antialiased">
+
+    <header class="bg-blue-700 text-white shadow-lg">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <h1 class="text-2xl sm:text-3xl font-bold text-center">Guía Interactiva: ISO 29110 para PYMES de Software</h1>
+        </div>
+    </header>
+
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-2 py-3">
+                <button data-tab="inicio" class="tab-button text-sm sm:text-base font-medium py-2 px-3 sm:px-4 border-b-2 border-transparent hover:bg-blue-50 hover:text-blue-600 rounded-t-md">🚀 Inicio</button>
+                <button data-tab="fundamentos" class="tab-button text-sm sm:text-base font-medium py-2 px-3 sm:px-4 border-b-2 border-transparent hover:bg-blue-50 hover:text-blue-600 rounded-t-md">📖 ¿Qué es ISO 29110?</button>
+                <button data-tab="guia" class="tab-button text-sm sm:text-base font-medium py-2 px-3 sm:px-4 border-b-2 border-transparent hover:bg-blue-50 hover:text-blue-600 rounded-t-md active">🛠️ La Guía Práctica</button>
+                <button data-tab="beneficios" class="tab-button text-sm sm:text-base font-medium py-2 px-3 sm:px-4 border-b-2 border-transparent hover:bg-blue-50 hover:text-blue-600 rounded-t-md">📈 Beneficios</button>
+                <button data-tab="implementacion" class="tab-button text-sm sm:text-base font-medium py-2 px-3 sm:px-4 border-b-2 border-transparent hover:bg-blue-50 hover:text-blue-600 rounded-t-md">🏁 Implementación y Más</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <section id="inicio" class="tab-content bg-white p-6 rounded-lg shadow-xl">
+            <h2>🚀 Bienvenido a la Guía Interactiva ISO 29110</h2>
+            <p class="section-intro">Esta sección te introduce al propósito de esta aplicación interactiva, basada en la tesis "Guía de buenas prácticas para la implementación del estándar ISO 29110 en las PYMES del sector software". Descubre el contexto y la importancia de este estándar para las pequeñas y medianas empresas desarrolladoras de software.</p>
+            
+            <p class="mb-4">Las Pequeñas y Medianas Empresas (PYMES) del sector software enfrentan desafíos únicos en la gestión de proyectos y el desarrollo de productos de calidad. A menudo, los estándares internacionales parecen complejos o demasiado robustos para sus necesidades y recursos limitados.</p>
+            <p class="mb-4">El estándar <strong>ISO/IEC 29110</strong> surge como una solución adaptada específicamente para estas entidades, proporcionando un marco de trabajo ligero y efectivo para mejorar sus procesos y la calidad de su software.</p>
+            <p>Esta guía interactiva tiene como objetivo presentar de forma clara y accesible los conceptos fundamentales de ISO 29110, la guía de buenas prácticas propuesta en la tesis para su implementación, y los beneficios que puede aportar a tu organización.</p>
+            <div class="mt-6 p-4 bg-sky-50 border border-sky-200 rounded-md">
+                <h3 class="text-sky-700 text-lg font-semibold mb-2">Propósito de esta Aplicación:</h3>
+                <ul class="list-disc list-inside text-sky-600 space-y-1">
+                    <li>Facilitar la comprensión del estándar ISO 29110.</li>
+                    <li>Presentar la "Guía de Buenas Prácticas" de la tesis.</li>
+                    <li>Mostrar los beneficios de su adopción en PYMES de software.</li>
+                    <li>Servir como un recurso de consulta rápida y dinámica.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="fundamentos" class="tab-content bg-white p-6 rounded-lg shadow-xl">
+            <h2>📖 ¿Qué es ISO 29110? Fundamentos del Estándar</h2>
+            <p class="section-intro">Aquí exploraremos los pilares del estándar ISO/IEC 29110. Comprenderás su definición, principios clave, estructura, los procesos fundamentales que aborda y por qué es una excelente opción para las PYMES en comparación con otros estándares más complejos.</p>
+
+            <h3>Definición y Propósito</h3>
+            <p>ISO/IEC 29110 es una serie de estándares y guías técnicas diseñadas específicamente para las "Entidades Muy Pequeñas" (Very Small Entities - VSEs), que generalmente son empresas, organizaciones, departamentos o proyectos con hasta 25 personas. Su propósito principal es ayudar a estas entidades a mejorar la calidad de sus procesos de desarrollo de software y gestión de proyectos, sin la carga burocrática de estándares más grandes.</p>
+
+            <h3>Principios Clave</h3>
+            <ul class="list-disc pl-5 mb-4 space-y-1">
+                <li><strong>Orientación a Procesos:</strong> Se enfoca en la implementación de procesos clave para el ciclo de vida del software.</li>
+                <li><strong>Adaptabilidad:</strong> Diseñado para ser flexible y adaptable a las necesidades específicas de las VSEs.</li>
+                <li><strong>Mejora Continua:</strong> Fomenta un ciclo de mejora en los procesos y productos.</li>
+                <li><strong>Ligereza:</strong> Busca minimizar la documentación y el esfuerzo de implementación.</li>
+            </ul>
+
+            <h3>Estructura del Estándar (Perfiles)</h3>
+            <p class="mb-2">ISO 29110 se organiza en perfiles que representan diferentes niveles de capacidad y madurez. Los más comunes para PYMES de software son:</p>
+            <div class="grid md:grid-cols-2 gap-4 my-4">
+                <div class="diagram-box">
+                    <h4 class="font-semibold text-blue-600 mb-1">Perfil Básico (Basic Profile)</h4>
+                    <p class="text-sm">Incluye dos procesos clave: Gestión de Proyectos (PM) y Ejecución de Software (SE). Es el punto de partida ideal.</p>
+                </div>
+                <div class="diagram-box">
+                    <h4 class="font-semibold text-blue-600 mb-1">Perfil de Entrada (Entry Profile)</h4>
+                    <p class="text-sm">Aún más ligero, enfocado en proyectos muy pequeños o startups que inician su camino en la estandarización.</p>
+                </div>
+                <div class="diagram-box md:col-span-2">
+                    <h4 class="font-semibold text-blue-600 mb-1">Otros Perfiles (Intermedio, Avanzado)</h4>
+                    <p class="text-sm">Para VSEs que desean alcanzar niveles más altos de madurez y capacidad en sus procesos.</p>
+                </div>
+            </div>
+            
+            <h3>Procesos Fundamentales (Ejemplo Perfil Básico)</h3>
+            <div class="flex flex-col md:flex-row gap-4 my-4">
+                <div class="flex-1 diagram-box bg-blue-50 border-blue-200">
+                    <h4 class="font-semibold text-blue-700 mb-1">Gestión de Proyectos (PM)</h4>
+                    <p class="text-sm">Cubre actividades como la planificación del proyecto, seguimiento, control de riesgos y gestión de la calidad del proyecto.</p>
+                </div>
+                <div class="flex-1 diagram-box bg-sky-50 border-sky-200">
+                    <h4 class="font-semibold text-sky-700 mb-1">Ejecución de Software (SE)</h4>
+                    <p class="text-sm">Incluye la especificación de requisitos, diseño, codificación, pruebas e implementación del software.</p>
+                </div>
+            </div>
+            <div class="text-center my-2 text-slate-500 text-2xl font-bold">↓ ↑</div>
+             <div class="diagram-box text-center">
+                <p class="text-sm">Ambos procesos (PM y SE) están interrelacionados para asegurar el éxito del proyecto y la calidad del producto.</p>
+            </div>
+
+
+            <h3>Diferenciación y Ventajas para PYMES</h3>
+            <p>A diferencia de estándares más amplios como ISO 9001 o CMMI (que pueden ser costosos y complejos de implementar para una PYME), ISO 29110 ofrece:</p>
+            <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Menor costo y esfuerzo</strong> de implementación.</li>
+                <li>Documentación <strong>más ligera y específica</strong>.</li>
+                <li>Enfoque en las <strong>necesidades reales</strong> de las VSEs.</li>
+                <li>Un camino claro para la <strong>mejora progresiva</strong>.</li>
+            </ul>
+        </section>
+
+        <section id="guia" class="tab-content bg-white p-6 rounded-lg shadow-xl active">
+            <h2>🛠️ La Guía Práctica de Buenas Prácticas Propuesta</h2>
+            <p class="section-intro">Esta sección detalla la "Guía de Buenas Prácticas para la implementación del estándar ISO 29110" desarrollada en la tesis. Conocerás su metodología, los componentes clave que la conforman y cómo está estructurada en fases para facilitar una adopción exitosa y adaptada a cada PYME.</p>
+
+            <h3>Metodología de la Guía</h3>
+            <p>La guía se desarrolló a través de un proceso que combinó la revisión exhaustiva de la literatura sobre ISO 29110, análisis de casos de estudio, y la adaptación de buenas prácticas de gestión de proyectos y desarrollo de software al contexto específico de las PYMES. Se buscó un equilibrio entre el rigor del estándar y la practicidad requerida por las pequeñas empresas.</p>
+
+            <h3>Componentes Clave de la Guía</h3>
+            <ul class="list-disc pl-5 mb-4 space-y-1">
+                <li><strong>Fases de Implementación Detalladas:</strong> Un camino paso-a-paso para la adopción del estándar.</li>
+                <li><strong>Plantillas y Artefactos Sugeridos:</strong> Ejemplos de documentos y registros que pueden ser adaptados (ej. Plan de Proyecto simplificado, Lista de Verificación de Requisitos).</li>
+                <li><strong>Roles y Responsabilidades Definidos:</strong> Clarificación de quién hace qué, adaptado a estructuras de PYMES.</li>
+                <li><strong>Herramientas Recomendadas:</strong> Sugerencias de herramientas (muchas de ellas gratuitas o de bajo costo) que pueden apoyar los procesos.</li>
+                <li><strong>Métricas Clave:</strong> Indicadores para medir el progreso y el impacto de la implementación.</li>
+            </ul>
+
+            <h3>Fases de Implementación de la Guía</h3>
+            <p>La guía propone un enfoque iterativo y adaptable, generalmente estructurado en las siguientes fases. Estas fases aseguran una implementación ordenada y efectiva del estándar ISO 29110.</p>
+            <div class="space-y-4 my-4">
+                <div class="diagram-box">
+                    <h4 class="font-semibold text-blue-600 mb-1">Fase 1: Diagnóstico y Concienciación</h4>
+                    <p class="text-sm">Evaluar la situación actual de la PYME, identificar brechas respecto a ISO 29110 y sensibilizar al equipo sobre los beneficios del estándar.</p>
+                </div>
+                <div class="text-center text-slate-400 text-xl">↓</div>
+                <div class="diagram-box">
+                    <h4 class="font-semibold text-blue-600 mb-1">Fase 2: Planificación de la Implementación</h4>
+                    <p class="text-sm">Definir el alcance de la implementación (qué procesos y proyectos se abordarán), establecer un plan de trabajo, asignar recursos y seleccionar herramientas.</p>
+                </div>
+                <div class="text-center text-slate-400 text-xl">↓</div>
+                <div class="diagram-box">
+                    <h4 class="font-semibold text-blue-600 mb-1">Fase 3: Adaptación e Implementación de Procesos</h4>
+                    <p class="text-sm">Adaptar las plantillas y guías a la realidad de la empresa. Implementar los procesos de Gestión de Proyectos (PM) y Ejecución de Software (SE) según el perfil elegido (ej. Básico).</p>
+                </div>
+                <div class="text-center text-slate-400 text-xl">↓</div>
+                <div class="diagram-box">
+                    <h4 class="font-semibold text-blue-600 mb-1">Fase 4: Ejecución y Seguimiento (Piloto)</h4>
+                    <p class="text-sm">Aplicar los nuevos procesos en un proyecto piloto. Realizar seguimiento, recolectar métricas y obtener retroalimentación del equipo.</p>
+                </div>
+                <div class="text-center text-slate-400 text-xl">↓</div>
+                <div class="diagram-box">
+                    <h4 class="font-semibold text-blue-600 mb-1">Fase 5: Evaluación y Mejora Continua</h4>
+                    <p class="text-sm">Evaluar los resultados del proyecto piloto, identificar lecciones aprendidas y realizar ajustes a los procesos. Planificar la extensión a otros proyectos y fomentar una cultura de mejora continua.</p>
+                </div>
+            </div>
+            
+            <h3>Adaptabilidad de la Guía</h3>
+            <p>Un principio fundamental de la guía es su flexibilidad. Se alienta a las PYMES a no verla como un manual rígido, sino como un conjunto de buenas prácticas y herramientas que deben ser adaptadas a su tamaño, cultura, tipo de proyectos y recursos disponibles. El objetivo no es la burocracia, sino la eficiencia y la calidad.</p>
+        </section>
+
+        <section id="beneficios" class="tab-content bg-white p-6 rounded-lg shadow-xl">
+            <h2>📈 Beneficios y Resultados Esperados</h2>
+            <p class="section-intro">Implementar ISO 29110 utilizando la guía de buenas prácticas puede traer consigo una serie de ventajas significativas para las PYMES del sector software. Esta sección detalla los beneficios tangibles e intangibles que se pueden esperar, ilustrados con un gráfico interactivo.</p>
+
+            <h3>Beneficios Clave</h3>
+            <ul class="list-disc pl-5 mb-6 space-y-2">
+                <li><strong>Mejora de la Calidad del Software:</strong> Reducción de defectos, software más robusto y fiable, lo que se traduce en mayor satisfacción del cliente.</li>
+                <li><strong>Optimización de la Gestión de Proyectos:</strong> Mejor planificación, seguimiento y control, aumentando la probabilidad de cumplir plazos y presupuestos.</li>
+                <li><strong>Mayor Eficiencia Operativa:</strong> Procesos más claros y estandarizados reducen el retrabajo y optimizan el uso de recursos.</li>
+                <li><strong>Reducción de Costos a Largo Plazo:</strong> Menos errores en producción, menor costo de mantenimiento y optimización de esfuerzos.</li>
+                <li><strong>Aumento de la Satisfacción del Cliente:</strong> Entregas de mayor calidad y cumplimiento de expectativas fortalecen la relación con los clientes.</li>
+                <li><strong>Mejora de la Imagen y Competitividad:</strong> Demostrar el compromiso con la calidad puede abrir puertas a nuevos mercados y diferenciar a la PYME de la competencia.</li>
+                <li><strong>Mayor Implicación y Motivación del Equipo:</strong> Procesos claros y roles definidos pueden mejorar el ambiente de trabajo y la productividad.</li>
+            </ul>
+
+            <h3>Impacto Visualizado: Antes vs. Después</h3>
+            <p class="mb-4">El siguiente gráfico ilustra el impacto potencial en algunas métricas clave tras la implementación de ISO 29110. (Datos ilustrativos)</p>
+            <div class="chart-container bg-slate-50 p-4 rounded-lg">
+                <canvas id="beneficiosChart" height="318" style="display: block; box-sizing: border-box; height: 318px; width: 568px;" width="568"></canvas>
+            </div>
+        </section>
+
+        <section id="implementacion" class="tab-content bg-white p-6 rounded-lg shadow-xl">
+            <h2>🏁 Implementación y Más Allá: Conclusiones y Próximos Pasos</h2>
+            <p class="section-intro">Llegamos al final de este recorrido interactivo. Aquí resumiremos los puntos clave, ofreceremos recomendaciones prácticas para las PYMES que deseen embarcarse en la implementación de ISO 29110 y sugeriremos posibles líneas futuras de investigación y desarrollo en esta área tan relevante.</p>
+
+            <h3>Recapitulación: Mensajes Clave</h3>
+            <ul class="list-disc pl-5 mb-6 space-y-2">
+                <li>ISO 29110 es un estándar <strong>accesible y valioso</strong> para las PYMES de software.</li>
+                <li>La "Guía de Buenas Prácticas" de la tesis ofrece un <strong>camino estructurado y adaptable</strong> para su implementación.</li>
+                <li>Los beneficios incluyen <strong>mejora en la calidad, eficiencia, satisfacción del cliente y competitividad</strong>.</li>
+                <li>La clave del éxito es la <strong>adaptación, el compromiso del equipo y la mejora continua</strong>.</li>
+            </ul>
+
+            <h3>Recomendaciones Prácticas para la Implementación</h3>
+            <ol class="list-decimal pl-5 mb-6 space-y-2">
+                <li><strong>Comenzar Pequeño:</strong> No intentes implementar todo de golpe. Selecciona un proyecto piloto y un alcance manejable.</li>
+                <li><strong>Involucrar al Equipo:</strong> La participación y el feedback del equipo son cruciales. La implementación no debe ser impuesta, sino construida conjuntamente.</li>
+                <li><strong>Adaptar, no Adoptar Ciegamente:</strong> Personaliza las plantillas, procesos y herramientas a la realidad de tu empresa.</li>
+                <li><strong>Buscar Apoyo si es Necesario:</strong> Considera la posibilidad de contar con asesoramiento externo o formación específica si los recursos internos son limitados.</li>
+                <li><strong>Fomentar la Cultura de Calidad:</strong> La implementación de un estándar es un cambio cultural. Promueve la importancia de la calidad en todos los niveles.</li>
+                <li><strong>Medir y Celebrar los Logros:</strong> Define métricas sencillas para seguir el progreso y reconoce los avances del equipo.</li>
+            </ol>
+
+            <h3>Líneas Futuras de Investigación y Desarrollo</h3>
+            <p>El campo de la mejora de procesos en PYMES de software sigue siendo fértil. Algunas áreas para futuras investigaciones podrían incluir:</p>
+            <ul class="list-disc pl-5 space-y-1">
+                <li>Desarrollo de herramientas de software específicas para facilitar la implementación de ISO 29110 en PYMES.</li>
+                <li>Estudios longitudinales sobre el impacto a largo plazo de ISO 29110 en la competitividad de las PYMES.</li>
+                <li>Adaptación de ISO 29110 a metodologías ágiles de forma más explícita.</li>
+                <li>Creación de comunidades de práctica para PYMES que han implementado o están implementando el estándar.</li>
+            </ul>
+
+            <div class="mt-8 p-4 bg-green-50 border border-green-200 rounded-md text-center">
+                <p class="text-green-700 font-semibold">¡Gracias por explorar esta guía interactiva! Esperamos que haya sido de utilidad para comprender el valor de ISO 29110 y la guía de buenas prácticas para las PYMES del sector software.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-800 text-slate-300 text-center py-6 mt-12">
+        <p class="text-sm">© 2024 Inspirado en la Tesis: "Guía de buenas prácticas para la implementación del estándar ISO 29110 en las PYMES del sector software".</p>
+        <p class="text-xs mt-1">Aplicación Interactiva desarrollada como ejemplo.</p>
+    </footer>
+
+    <script>
+        const tabs = document.querySelectorAll('.tab-button');
+        const contents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetId = tab.dataset.tab;
+                
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                contents.forEach(content => {
+                    if (content.id === targetId) {
+                        content.classList.add('active');
+                    } else {
+                        content.classList.remove('active');
+                    }
+                });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+
+        // Chart.js para la sección de Beneficios
+        const beneficiosChartCtx = document.getElementById('beneficiosChart');
+        if (beneficiosChartCtx) {
+            const beneficiosChart = new Chart(beneficiosChartCtx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Reducción Defectos', 'Mejora Entrega Tiempo', 'Satisfacción Cliente', 'Eficiencia Proceso'],
+                    datasets: [{
+                        label: 'Impacto Estimado (%)',
+                        data: [30, 25, 35, 20], // Datos ilustrativos
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)', // blue-500
+                            'rgba(14, 165, 233, 0.7)', // sky-500
+                            'rgba(34, 197, 94, 0.7)',  // green-500
+                            'rgba(249, 115, 22, 0.7)'  // orange-500
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(14, 165, 233, 1)',
+                            'rgba(34, 197, 94, 1)',
+                            'rgba(249, 115, 22, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + "%"
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    // Simple label wrapping logic (Chart.js often handles this well, but good for explicit control)
+                                    let label = this.getLabelForValue(value);
+                                    if (label.length > 16) { // Max 16 chars per line, rough split
+                                       // Chart.js usually handles this by default with autoSkip or by providing array of strings for labels
+                                       // For very custom wrapping, you might need to process labels beforehand
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false 
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + '%';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+
+
+
+</body></html>
